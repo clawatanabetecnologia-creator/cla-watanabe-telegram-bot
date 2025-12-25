@@ -1,16 +1,16 @@
 import os
 import telebot
 import re
-
+import threading
+import time
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 # =============================
 # CONFIGURAÇÃO
 # =============================
-import os
 TOKEN = os.getenv("BOT_TOKEN")
 OWNER_ID = 798994990  # seu user_id do @userinfobot
 
-# Palavras e padrões proibidos (para quem NÃO é você)
 BLOCK = r"(http|https|www\.|\.com|\.br|t\.me|wa\.me|pix|r\$|usd|dólar|real|promo|oferta|venda)"
 
 bot = telebot.TeleBot(TOKEN)
@@ -38,7 +38,7 @@ def protect_channel(message):
         bot.delete_message(message.chat.id, message.message_id)
         return
 
-    # Qualquer mensagem de outro admin ou bot
+    # Qualquer outra mensagem também é apagada
     bot.delete_message(message.chat.id, message.message_id)
 
 # =============================
@@ -49,20 +49,32 @@ def ping(message):
     if message.from_user.id == OWNER_ID:
         bot.reply_to(message, "🟢 Firewall ativo no canal.")
 
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
-
+# =============================
+# SERVIDOR HTTP FALSO (Koyeb)
+# =============================
 class DummyHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"OK")
 
-def run_dummy_server():
+def run_http():
     server = HTTPServer(("0.0.0.0", 8000), DummyHandler)
+    print("HTTP server running on 8000")
     server.serve_forever()
 
-threading.Thread(target=run_dummy_server, daemon=True).start()
-
 # =============================
-bot.infinity_polling()
+# START
+# =============================
+def main():
+    # sobe servidor HTTP primeiro
+    threading.Thread(target=run_http, daemon=True).start()
+
+    # dá tempo pro Koyeb enxergar a porta
+    time.sleep(2)
+
+    # inicia o bot
+    print("Starting Telegram bot")
+    bot.infinity_polling(skip_pending=True)
+
+main()
