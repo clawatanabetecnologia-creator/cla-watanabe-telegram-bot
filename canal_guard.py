@@ -49,8 +49,6 @@ def ping(message):
     if message.from_user.id == OWNER_ID:
         bot.reply_to(message, "🟢 Firewall ativo no canal.")
 
-# =============================
-bot.infinity_polling()
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -65,3 +63,6 @@ def run_dummy_server():
     server.serve_forever()
 
 threading.Thread(target=run_dummy_server, daemon=True).start()
+
+# =============================
+bot.infinity_polling()
